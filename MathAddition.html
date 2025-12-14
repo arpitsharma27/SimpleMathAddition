@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Addition Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        #question-display {
+            font-size: 2em;
+            margin-bottom: 25px;
+            color: #007bff;
+            min-height: 1.5em; /* To prevent layout shift */
+        }
+        #answer-input {
+            padding: 10px;
+            font-size: 1.2em;
+            width: calc(100% - 22px);
+            max-width: 200px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .button-group button {
+            padding: 10px 20px;
+            font-size: 1em;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #start-game-btn, #end-game-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        #start-game-btn:hover, #end-game-btn:hover {
+            background-color: #218838;
+        }
+        #submit-answer-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        #submit-answer-btn:hover {
+            background-color: #0056b3;
+        }
+        #next-question-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+        #next-question-btn:hover {
+            background-color: #5a6268;
+        }
+        #feedback-display {
+            font-size: 1.5em;
+            margin-top: 20px;
+            min-height: 1.5em; /* To prevent layout shift */
+        }
+        .correct {
+            color: #28a745;
+        }
+        .incorrect {
+            color: #dc3545;
+        }
+        #download-results-btn {
+            background-color: #17a2b8;
+            color: white;
+            margin-top: 30px;
+        }
+        #download-results-btn:hover {
+            background-color: #138496;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Addition Challenge!</h1>
+        <p>Your goal is to add the numbers as quickly and accurately as possible.</p>
+
+        <div id="game-area">
+            <div id="question-display"></div>
+            <input type="number" id="answer-input" placeholder="Your Answer" disabled>
+            <div class="button-group">
+                <button id="start-game-btn">Start Game</button>
+                <button id="submit-answer-btn" class="hidden">Submit Answer</button>
+                <button id="next-question-btn" class="hidden">Next Question</button>
+                <button id="end-game-btn" class="hidden">End Game</button>
+            </div>
+            <div id="feedback-display"></div>
+        </div>
+        <button id="download-results-btn" class="hidden">Download Results</button>
+    </div>
+
+    <script>
+        let num1, num2, correctAnswer, startTime;
+        let gameActive = false;
+        let results = []; // Stores { question: "...", userAnswer: ..., correctAnswer: ..., timeTaken: ..., correct: true/false }
+
+        const questionDisplay = document.getElementById('question-display');
+        const answerInput = document.getElementById('answer-input');
+        const feedbackDisplay = document.getElementById('feedback-display');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const submitAnswerBtn = document.getElementById('submit-answer-btn');
+        const nextQuestionBtn = document.getElementById('next-question-btn');
+        const endGameBtn = document.getElementById('end-game-btn');
+        const downloadResultsBtn = document.getElementById('download-results-btn');
+
+        function generateQuestion() {
+            num1 = Math.floor(Math.random() * 100) + 1; // 1 to 100
+            num2 = Math.floor(Math.random() * 11);     // 0 to 10
+            correctAnswer = num1 + num2;
+            questionDisplay.textContent = `What is ${num1} + ${num2}?`;
+            answerInput.value = '';
+            feedbackDisplay.textContent = '';
+            feedbackDisplay.className = '';
+            answerInput.focus();
+            startTime = Date.now();
+
+            submitAnswerBtn.classList.remove('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            answerInput.disabled = false;
+            answerInput.classList.remove('hidden'); // Ensure input is visible
+        }
+
+        function startGame() {
+            gameActive = true;
+            results = []; // Clear previous results
+            startGameBtn.classList.add('hidden');
+            downloadResultsBtn.classList.add('hidden');
+            endGameBtn.classList.remove('hidden');
+            answerInput.classList.remove('hidden'); // Ensure input is visible when game starts
+            generateQuestion();
+        }
+
+        function checkAnswer() {
+            if (!gameActive) return;
+
+            const userAnswer = parseInt(answerInput.value);
+            if (isNaN(userAnswer)) {
+                feedbackDisplay.textContent = 'Please enter a number.';
+                feedbackDisplay.className = 'incorrect';
+                return;
+            }
+
+            const timeTaken = (Date.now() - startTime) / 1000; // in seconds
+            const isCorrect = userAnswer === correctAnswer;
+
+            feedbackDisplay.textContent = isCorrect ? 'Correct!' : `Incorrect. The answer was ${correctAnswer}.`;
+            feedbackDisplay.className = isCorrect ? 'correct' : 'incorrect';
+
+            results.push({
+                question: `${num1} + ${num2}`,
+                userAnswer: userAnswer,
+                correctAnswer: correctAnswer,
+                timeTaken: timeTaken.toFixed(2), // 2 decimal places
+                correct: isCorrect
+            });
+
+            submitAnswerBtn.classList.add('hidden');
+            nextQuestionBtn.classList.remove('hidden');
+            answerInput.disabled = true;
+        }
+
+        function endGame() {
+            gameActive = false;
+            questionDisplay.textContent = 'Game Over!';
+            answerInput.value = ''; // Clear input
+            answerInput.classList.add('hidden'); // Hide input after game ends
+            feedbackDisplay.textContent = `You answered ${results.filter(r => r.correct).length} out of ${results.length} questions correctly.`;
+            feedbackDisplay.className = '';
+
+            submitAnswerBtn.classList.add('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            endGameBtn.classList.add('hidden');
+            startGameBtn.classList.remove('hidden');
+            downloadResultsBtn.classList.remove('hidden');
+        }
+
+        function downloadResults() {
+            if (results.length === 0) {
+                alert('No results to download.');
+                return;
+            }
+
+            let csvContent = "Question,User Answer,Correct Answer,Time Taken (s),Correct\n";
+            results.forEach(row => {
+                csvContent += `${row.question},${row.userAnswer},${row.correctAnswer},${row.timeTaken},${row.correct}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'math_game_results.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Event Listeners
+        startGameBtn.addEventListener('click', startGame);
+        submitAnswerBtn.addEventListener('click', checkAnswer);
+        nextQuestionBtn.addEventListener('click', generateQuestion);
+        endGameBtn.addEventListener('click', endGame);
+        downloadResultsBtn.addEventListener('click', downloadResults);
+
+        answerInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter' && !submitAnswerBtn.classList.contains('hidden')) {
+                checkAnswer();
+            } else if (event.key === 'Enter' && !nextQuestionBtn.classList.contains('hidden')) {
+                generateQuestion();
+            }
+        });
+
+        // Initial state setup to be called after all elements are loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            questionDisplay.textContent = 'Click "Start Game" to begin!';
+            answerInput.disabled = true;
+            answerInput.classList.remove('hidden'); // Ensure it's visible but disabled
+            startGameBtn.classList.remove('hidden');
+            submitAnswerBtn.classList.add('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            endGameBtn.classList.add('hidden');
+            downloadResultsBtn.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
