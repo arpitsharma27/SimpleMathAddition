@@ -95,15 +95,49 @@
         #download-results-btn:hover {
             background-color: #138496;
         }
+
+        #progress-container {
+            width: 80%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin: 20px auto;
+            height: 20px;
+            position: relative;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #28a745; /* Green */
+            border-radius: 10px;
+            transition: width 0.3s ease-in-out;
+        }
+
+        #level-display {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 20px; /* Center text vertically */
+            top: 0;
+            left: 0;
+            font-weight: bold;
+            color: #333;
+        }
+
         .hidden {
             display: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+        <div class="container">
         <h1>Addition Challenge!</h1>
         <p>Your goal is to add the numbers as quickly and accurately as possible.</p>
+
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+            <div id="level-display">Level 1</div>
+        </div>
 
         <div id="game-area">
             <div id="question-display"></div>
@@ -126,6 +160,8 @@
         let num2RangeStart = 0; // Starting range for num2
         let num2RangeEnd = 10;  // Ending range for num2
         let consecutiveCorrectAnswers = 0;
+        let currentLevel = 1; // Start at level 1
+        let levelProgress = 0; // Correct answers in current level
         const questionsPerLevel = 5; // Number of consecutive correct answers to advance level
 
         const questionDisplay = document.getElementById('question-display');
@@ -136,6 +172,8 @@
         const nextQuestionBtn = document.getElementById('next-question-btn');
         const endGameBtn = document.getElementById('end-game-btn');
         const downloadResultsBtn = document.getElementById('download-results-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const levelDisplay = document.getElementById('level-display');
 
         function generateQuestion() {
             num1 = Math.floor(Math.random() * 100) + 1; // 1 to 100
@@ -160,11 +198,14 @@
             num2RangeStart = 0; // Reset range for new game
             num2RangeEnd = 10;  // Reset range for new game
             consecutiveCorrectAnswers = 0; // Reset consecutive correct answers
+            currentLevel = 1; // Start at level 1
+            levelProgress = 0; // Reset progress within level
             startGameBtn.classList.add('hidden');
             downloadResultsBtn.classList.add('hidden');
             endGameBtn.classList.remove('hidden');
             answerInput.classList.remove('hidden'); // Ensure input is visible when game starts
             generateQuestion();
+            updateProgressBar();
         }
 
         function checkAnswer() {
@@ -181,18 +222,26 @@
             const isCorrect = userAnswer === correctAnswer;
 
             if (isCorrect) {
-                consecutiveCorrectAnswers++;
-                if (consecutiveCorrectAnswers >= questionsPerLevel) {
-                    num2RangeStart += 10;
+                levelProgress++; // Car moves forward
+                if (levelProgress >= questionsPerLevel) {
+                    levelProgress = 0; // Reset progress for the next level
+                    currentLevel++;      // Advance to the next level
+                    num2RangeStart += 10; // Increase difficulty
                     num2RangeEnd += 10;
-                    consecutiveCorrectAnswers = 0; // Reset for the new level
                     feedbackDisplay.textContent += ' Level Up!';
+
+                    if (currentLevel > 10) {
+                        // Game completed all levels
+                        endGame();
+                        questionDisplay.textContent = 'Congratulations! You completed all 10 levels!';
+                        return; // Exit function after ending game
+                    }
                 }
             } else {
-                consecutiveCorrectAnswers = 0; // Reset on incorrect answer
-                // Optional: reset num2 range to initial if a question is answered incorrectly
-                // num2RangeStart = 0;
-                // num2RangeEnd = 10;
+                levelProgress = 0; // Reset progress on incorrect answer
+                // Reset num2 range to initial if a question is answered incorrectly
+                num2RangeStart = 0;
+                num2RangeEnd = 10;
             }
 
             feedbackDisplay.textContent = isCorrect ? 'Correct!' : `Incorrect. The answer was ${correctAnswer}.`;
@@ -209,6 +258,7 @@
             submitAnswerBtn.classList.add('hidden');
             nextQuestionBtn.classList.remove('hidden');
             answerInput.disabled = true;
+            updateProgressBar();
         }
 
         function endGame() {
@@ -246,12 +296,19 @@
             document.body.removeChild(link);
         }
 
+        function updateProgressBar() {
+            const progressPercentage = (levelProgress / questionsPerLevel) * 100;
+            progressBar.style.width = `${progressPercentage}%;`;
+            levelDisplay.textContent = `Level ${currentLevel} - Progress: ${levelProgress}/${questionsPerLevel}`;
+        }
+
         // Event Listeners
         startGameBtn.addEventListener('click', startGame);
         submitAnswerBtn.addEventListener('click', checkAnswer);
         nextQuestionBtn.addEventListener('click', generateQuestion);
         endGameBtn.addEventListener('click', endGame);
         downloadResultsBtn.addEventListener('click', downloadResults);
+
 
         answerInput.addEventListener('keypress', function(event) {
             if (event.key === 'Enter' && !submitAnswerBtn.classList.contains('hidden')) {
@@ -268,12 +325,15 @@
             num2RangeStart = 0; // Ensure initial range is set on load
             num2RangeEnd = 10;  // Ensure initial range is set on load
             consecutiveCorrectAnswers = 0; // Ensure initial count is set on load
+            currentLevel = 1; // Initial level
+            levelProgress = 0; // Initial progress
             answerInput.classList.remove('hidden'); // Ensure it's visible but disabled
             startGameBtn.classList.remove('hidden');
             submitAnswerBtn.classList.add('hidden');
             nextQuestionBtn.classList.add('hidden');
             endGameBtn.classList.add('hidden');
             downloadResultsBtn.classList.add('hidden');
+            updateProgressBar(); // Set initial progress bar and level display
         });
     </script>
 </body>
