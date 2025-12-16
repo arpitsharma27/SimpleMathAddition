@@ -6,7 +6,7 @@
     <title>Math Addition Game</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+        font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -123,6 +123,10 @@
         let num1, num2, correctAnswer, startTime;
         let gameActive = false;
         let results = []; // Stores { question: "...", userAnswer: ..., correctAnswer: ..., timeTaken: ..., correct: true/false }
+        let num2RangeStart = 0; // Starting range for num2
+        let num2RangeEnd = 10;  // Ending range for num2
+        let consecutiveCorrectAnswers = 0;
+        const questionsPerLevel = 5; // Number of consecutive correct answers to advance level
 
         const questionDisplay = document.getElementById('question-display');
         const answerInput = document.getElementById('answer-input');
@@ -135,7 +139,7 @@
 
         function generateQuestion() {
             num1 = Math.floor(Math.random() * 100) + 1; // 1 to 100
-            num2 = Math.floor(Math.random() * 11);     // 0 to 10
+            num2 = Math.floor(Math.random() * (num2RangeEnd - num2RangeStart + 1)) + num2RangeStart;
             correctAnswer = num1 + num2;
             questionDisplay.textContent = `What is ${num1} + ${num2}?`;
             answerInput.value = '';
@@ -153,6 +157,9 @@
         function startGame() {
             gameActive = true;
             results = []; // Clear previous results
+            num2RangeStart = 0; // Reset range for new game
+            num2RangeEnd = 10;  // Reset range for new game
+            consecutiveCorrectAnswers = 0; // Reset consecutive correct answers
             startGameBtn.classList.add('hidden');
             downloadResultsBtn.classList.add('hidden');
             endGameBtn.classList.remove('hidden');
@@ -172,6 +179,21 @@
 
             const timeTaken = (Date.now() - startTime) / 1000; // in seconds
             const isCorrect = userAnswer === correctAnswer;
+
+            if (isCorrect) {
+                consecutiveCorrectAnswers++;
+                if (consecutiveCorrectAnswers >= questionsPerLevel) {
+                    num2RangeStart += 10;
+                    num2RangeEnd += 10;
+                    consecutiveCorrectAnswers = 0; // Reset for the new level
+                    feedbackDisplay.textContent += ' Level Up!';
+                }
+            } else {
+                consecutiveCorrectAnswers = 0; // Reset on incorrect answer
+                // Optional: reset num2 range to initial if a question is answered incorrectly
+                // num2RangeStart = 0;
+                // num2RangeEnd = 10;
+            }
 
             feedbackDisplay.textContent = isCorrect ? 'Correct!' : `Incorrect. The answer was ${correctAnswer}.`;
             feedbackDisplay.className = isCorrect ? 'correct' : 'incorrect';
@@ -243,6 +265,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             questionDisplay.textContent = 'Click "Start Game" to begin!';
             answerInput.disabled = true;
+            num2RangeStart = 0; // Ensure initial range is set on load
+            num2RangeEnd = 10;  // Ensure initial range is set on load
+            consecutiveCorrectAnswers = 0; // Ensure initial count is set on load
             answerInput.classList.remove('hidden'); // Ensure it's visible but disabled
             startGameBtn.classList.remove('hidden');
             submitAnswerBtn.classList.add('hidden');
